@@ -1,11 +1,10 @@
-from logging import exception
-from turtle import color
+from random import sample
 from sklearn.datasets._samples_generator import make_blobs
 import numpy as np
 import matplotlib.pyplot as plt
 
 class KMeansClassifier:
-    def __init__(self, k=2) -> None:
+    def __init__(self, k=3) -> None:
         self.k = k
         self.new_centroids = []
         self.centroids = None
@@ -26,12 +25,11 @@ class KMeansClassifier:
             distances.append(self.distance(points1[i], points2[i]))
         return sum(distances) / len(points1)
 
-    def train(self, data_points, threshold=0.0001):
+    def train(self, data_points, threshold=0.0001) -> None:
         data_points = np.array(data_points, dtype=float)
 
         for i in range(self.k):
             self.new_centroids.append(data_points[i * len(data_points)//self.k])
-
         
         self.new_centroids = np.array(self.new_centroids)
         self.centroids = np.zeros(shape=self.new_centroids.shape)
@@ -50,10 +48,20 @@ class KMeansClassifier:
             self.new_centroids = np.array(self.new_centroids, dtype=float)
             self.iterations += 1
 
-    def fit(self):
-        if not self.centroids: raise Exception('Model is not trained on any data!')
+    def fit(self, datapoints) -> None:
+        try : 
+            if not self.centroids: raise Exception('Model is not trained on any data!')
+        except :
+            pass
+
+        for datapoint in datapoints:
+            cluster = self.multi_distance(datapoint, self.centroids)
+            self.data_clusters[cluster].append(datapoint)
+
+        for i in range(self.k):
+            self.centroids[i] = np.mean(self.data_clusters[i], axis=0)
     
-    def info(self):
+    def info(self) -> None:
         print('-'*32)
         print("        -: Clustering Info :-")
         print("Total Iterations : ", self.iterations)
@@ -69,7 +77,7 @@ class KMeansClassifier:
             print(f'Centroid {i+1} : {self.centroids[i]}')
         print('-'*32)
     
-    def show_as_graph(self):
+    def show_as_graph(self) -> None:
         try:
             if not self.centroids: raise Exception('Model is not trained on any data!')
         except ValueError:
@@ -95,13 +103,18 @@ class KMeansClassifier:
         plt.show()
 
 if __name__ == '__main__':
-    sample_size = 750
+    sample_size = 400
     k = 3
 
-    X = [[2,10], [2, 5], [8, 4], [5,8], [7, 5], [6, 4], [1, 2], [4, 9]]
+    X, y = make_blobs(n_samples=sample_size, centers=k, center_box=(-20, 20))
 
     classifier = KMeansClassifier(k=k)
-    classifier.train(X)
+    classifier.train(X[:300])
+
+    classifier.info()
+    classifier.show_as_graph()
+
+    classifier.fit(X[300:])
 
     classifier.info()
     classifier.show_as_graph()
